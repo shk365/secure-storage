@@ -1,0 +1,38 @@
+# 🔐 Environment & Secrets
+.env
+.env.*
+*.env
+
+# 🐍 Python (Backend)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+instance/
+.venv/
+venv/
+env/
+
+# 📦 Node (Frontend)
+node_modules/
+build/
+dist/
+
+# 📁 Uploads / Generated Files
+uploads/
+*.enc
+
+# 🧾 Logs
+*.log
+
+# 💻 OS Files
+.DS_Store
+Thumbs.db
+
+# 🧠 IDE / Editor
+.vscode/
+.idea/
+
+# 🔑 IPFS / Local Data
+.ipfs/

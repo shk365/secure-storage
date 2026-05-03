@@ -1,0 +1,220 @@
+body {
+  margin: 0;
+  font-family: "Helvetica";
+  transition: all 0.3s ease;
+  background: #ffffff;
+}
+
+/* LIGHT */
+body.light {
+  background: #ffffff;
+  color: #000000;
+}
+
+/* DARK */
+body.dark {
+  background: #000000;
+  color: #ffffff;
+}
+
+.logoutBtn {
+  background: #ffffff;
+  color: black;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.logoutBtn:hover {
+  border: 1px solid #9f9f9f;
+}
+
+.searchBar {
+  position: absolute;
+  height: 30px;
+  width: 40%;
+  top: 20px;
+  left: 300px;
+  border-radius: 16px;
+  border: 1px solid #b9b9b9;
+  z-index: 999;
+  padding-left: 16px;
+}
+
+.searchBar:focus {
+  border: 1px solid #787878;
+}
+
+.searchBar:hover {
+  border: 1px solid #afafaf;
+}
+
+.fileTypeFilterBtn {
+  border-radius: 5px;
+  border: 1px solid #e0e0e0;
+  font-size: 14px;
+  color: #4b4b4b;
+  padding: 8px 8px 6px 8px;
+  cursor: pointer;
+}
+
+.fileTypeFilterBtn:hover {
+  border: 1px solid #b9b9b9;
+  color: black;
+}
+
+.fileCard {
+  position: relative;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.fileCard:hover {
+  border: 1px solid #acacac;
+}
+
+/* hidden by default */
+.overlayIcons {
+  position: absolute;
+  top: 10px;
+  display: flex;
+  gap: 12px;
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  text-align: center;
+}
+
+.fileCard:hover .overlayIcons {
+  opacity: 1 !important;
+  pointer-events: auto;
+}
+
+.fileName {
+  font-size: 14px;
+  text-align: "center";
+  margin-top: 10px;
+  margin-bottom: 0px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100px;
+}
+
+.dropDownMenuItems {
+  padding: 5px 10px 5px 10px;
+  margin: 0px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dropDownMenuItems:hover {
+  background: #e8f0fe;
+}
+
+.fileImage {
+  font-size: 30px;
+  height: 50px;
+}
+
+.iconButton {
+  border: none;
+  border-radius: 5px;
+  background-color: #f4f4f4;
+  cursor: pointer;
+  font-size: 22px;
+  padding-bottom: 2px;
+  padding-top: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+
+}
+
+.iconButton:hover {
+  opacity: 1;
+}
+
+.shareBtn {
+  background: #4c6daf;
+  color: white;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 22px;
+  padding: 8px;
+  margin-top: 20px;
+}
+
+.fileNameInDialogBox {
+  font-size: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: "8px"
+}
+
+.copyBtn {
+  background: #fff;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.copyBtn:hover {
+  border: 1px solid #9f9f9f;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Slider background */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #cfd8dc;
+  border-radius: 30px;
+  transition: 0.3s;
+}
+
+/* Circle */
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 2px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+/* ON state */
+.switch input:checked+.slider {
+  background: #4c6daf;
+}
+
+/* Move circle */
+.switch input:checked+.slider::before {
+  transform: translateX(24px);
+}
