@@ -263,7 +263,7 @@ const link = {
   display: "flex",
   alignItems: "center",
   gap: "10px",
-  fontSize: "14px",
+  fontSize: "16px",
 };
 
 const content = {

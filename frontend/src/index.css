@@ -39,13 +39,15 @@ body.dark {
   top: 20px;
   left: 300px;
   border-radius: 16px;
-  border: 1px solid #b9b9b9;
+  border: 1px solid #eaeaea;
+  background-color: #eaeaea;
   z-index: 999;
-  padding-left: 16px;
+  padding-left: 18px;
+  font-size: 16px;
 }
 
 .searchBar:focus {
-  border: 1px solid #787878;
+  border: 1px solid #e7e5e5;
 }
 
 .searchBar:hover {
@@ -149,6 +151,29 @@ body.dark {
   margin-top: 20px;
 }
 
+.renameBtn {
+  background: #4c6daf;
+  color: white;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 18px;
+  padding: 8px;
+  margin-top: 20px;
+  margin-left: 14px;
+}
+
+.cancelBtn {
+  background: #ffffff;
+  color: black;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 18px;
+  padding: 8px;
+  margin-top: 20px;
+}
+
 .fileNameInDialogBox {
   font-size: 22px;
   white-space: nowrap;
@@ -168,6 +193,18 @@ body.dark {
 
 .copyBtn:hover {
   border: 1px solid #9f9f9f;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 258px;
+  right: 255px;
+  background: #fff;
+  cursor: pointer;
+  border: 1px solid #d5d5d5;
+  border-radius: 5px;
+  font-size: 18px;
+  padding: 5px;
 }
 
 .switch {
