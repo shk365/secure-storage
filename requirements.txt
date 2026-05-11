@@ -1,0 +1,17 @@
+# requirements.txt
+
+Flask
+Flask-Cors
+Flask-JWT-Extended
+Flask-SQLAlchemy
+SQLAlchemy
+Werkzeug
+cryptography
+requests
+python-dotenv
+psycopg2-binary
+PyJWT
+ipfshttpclient
+qrcode
+Pillow
+gunicorn
