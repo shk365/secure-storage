@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import "../index.css";
 import { QRCodeCanvas } from "qrcode.react";
+import RenameDialog from "./RenameDialog";
 
 function FileList() {
   const { refreshTrigger } = useOutletContext();
@@ -20,7 +21,13 @@ function FileList() {
   const [peopleModal, setPeopleModal] = useState(false);
   const menuRef = useRef(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const openRename = (file) => {
+    setSelectedFile(file);
+    setRenameOpen(true);
+  };
 
   useEffect(() => {
     fetchFiles();
@@ -241,14 +248,6 @@ function FileList() {
     }
   };
 
-  const handleRename = (fileId) => {
-    const newName = prompt("Enter new name:");
-    if (!newName) return;
-
-    // (You don’t have backend route yet)
-    console.log("Rename:", fileId, newName);
-  };
-
   const openDetails = (file) => {
     const formatSize = (bytes) => {
       if (bytes < 1024) return bytes + " B";
@@ -345,7 +344,7 @@ function FileList() {
                           <div className="dropDownMenuItems" onClick={() => { handleShareLink(file.id); setMenuOpen(null); }}>Share via Link or QR</div>
                           <div className="dropDownMenuItems" onClick={() => { openSharePeople(file.id); setMenuOpen(null); }}>Share with others</div>
                           <div className="dropDownMenuItems" onClick={() => { toggleStar(file.id); setMenuOpen(null); }}>Add to Starred</div>
-                          <div className="dropDownMenuItems" onClick={() => { handleRename(file.id); setMenuOpen(null); }}>Rename</div>
+                          <div className="dropDownMenuItems" onClick={() => { openRename(file); setMenuOpen(null); }}>Rename</div>
                           <div className="dropDownMenuItems" onClick={() => { openDetails(file); setMenuOpen(null); }}>Details</div>
                           <div className="dropDownMenuItems" onClick={() => { handleDelete(file.id); setMenuOpen(null); }}>Move to Bin</div>
                         </div>
@@ -417,6 +416,19 @@ function FileList() {
                               </button>
                             </div>
 
+                          </div>
+                        </div>
+                      )}
+                      {renameOpen && selectedFile && (
+                        <div style={modalOverlay}>
+                          <div style={modal}>
+                            <RenameDialog
+                              open={renameOpen}
+                              onClose={() => setRenameOpen(false)}
+                              file={selectedFile}
+                              token={localStorage.getItem("token")}
+                              onRenameSuccess={fetchFiles}
+                            />
                           </div>
                         </div>
                       )}
@@ -509,7 +521,7 @@ const modalOverlay = {
   left: 0,
   width: "100%",
   height: "100%",
-  background: "rgba(0,0,0,0.3)",
+  background: "rgba(0, 0, 0, 0.05)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
