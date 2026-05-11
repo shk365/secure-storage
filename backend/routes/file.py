@@ -265,7 +265,10 @@ from datetime import datetime, timedelta
 def delete_old_files():
     expiry = datetime.now(timezone.utc) - timedelta(days=30)
 
-    files = File.objects(deleted=True, deleted_at=expiry)
+    files = File.query.filter(
+        File.deleted == True,
+        File.deleted_at <= expiry
+    ).all()
 
     for file in files:
         file.delete()
@@ -463,3 +466,45 @@ def toggle_star():
     db.session.commit()
 
     return {"starred": file.is_starred}
+
+# RENAME FILE
+@file_bp.route("/rename", methods=["POST"])
+@jwt_required()
+def rename_file():
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+
+    file_id = data.get("id")
+    new_name = data.get("new_name")
+
+    if not file_id or not new_name:
+        return {"message": "File ID and new name required"}, 400
+
+    file = File.query.get(file_id)
+
+    if not file:
+        return {"message": "File not found"}, 404
+
+    # Only owner can rename
+    if file.owner_id != user_id:
+        return {"message": "Unauthorized"}, 403
+
+    old_name = file.filename
+
+    # update filename
+    file.filename = new_name.strip()
+
+    # log activity
+    activity = Activity(
+        action="RENAME",
+        filename=f"{old_name} -> {new_name}",
+        user_id=user_id
+    )
+
+    db.session.add(activity)
+    db.session.commit()
+
+    return {
+        "message": "File renamed successfully",
+        "filename": file.filename
+    }, 200
