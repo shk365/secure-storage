@@ -3,11 +3,15 @@ from flask_cors import CORS
 from config import Config
 from extensions import db
 from flask_jwt_extended import JWTManager
-
+import requests
+from flask import jsonify
+from flask_migrate import Migrate
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+migrate = Migrate(app, db)
 
 CORS(app)
 
@@ -32,8 +36,32 @@ app.register_blueprint(file_bp, url_prefix="/file")
 def home():
     return {"message": "API Running 🚀"}
 
+@app.route("/api/ipfs/geolocation/<ip>")
+def get_ip_geolocation(ip):
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        response = requests.get(
+            f"http://ip-api.com/json/{ip}",
+            headers=headers,
+            timeout=5
+        )
+
+        data = response.json()
+
+        print(data)
+
+        return jsonify(data)
+
+    except Exception as e:
+        print("GeoIP Error:", e)
+        return jsonify({
+            "error": str(e)
+        }), 500
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
