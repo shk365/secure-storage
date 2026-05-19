@@ -29,7 +29,7 @@ function Activity() {
 
   return (
     <div style={container}>
-      <h5>Activity Logs</h5>
+      <h1>Activity Logs</h1>
 
       {logs.length === 0 ? (
         <p>No activity yet</p>

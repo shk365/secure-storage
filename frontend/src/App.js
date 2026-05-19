@@ -9,6 +9,8 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SharedFiles from "./components/SharedFiles";
 import StarredPage from "./pages/StarredPage";
+import IPFSStatus from "./pages/IPFSStatus";
+import IPFSPeers from "./pages/IPFSPeers";
 console.log("App rendering");
 
 
@@ -27,7 +29,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard         />}>
+        <Route path="/" element={<Dashboard />}>
           <Route index element={<Navigate to="/files" />} />
           <Route path="files" element={<FilesPage />} />
           <Route path="activity" element={<ActivityPage />} />
@@ -35,6 +37,8 @@ function App() {
           <Route path="/shared" element={<SharedFiles />} />
           <Route path="/starred" element={<StarredPage />} />
           <Route path="bin" element={<BinPage />} />
+          <Route path="/ipfs-status" element={<IPFSStatus />} />
+          <Route path="/ipfs-peers" element={<IPFSPeers />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -16,6 +16,8 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
     { path: "/starred", icon: "⭐", name: "Starred" },
     { path: "/activity", icon: "🕒", name: "Activity" },
     { path: "/bin", icon: "🗑️", name: "Bin" },
+    { path: "/ipfs-status", icon: "📊", name: "IPFS Status" },
+    { path: "/ipfs-peers", icon: "👥", name: "IPFS Peers" },
   ];
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -236,6 +238,12 @@ const main = {
 
 const sidebar = (collapsed) => ({
   width: collapsed ? "70px" : "180px",
+  position: "sticky",
+  top: 0,
+  height: "100vh",
+  overflowY: "auto",
+  overflowX: "hidden",
+  flexShrink: 0,
   background: "#ffffff",
   borderRight: "1px solid #e5e7eb",
   padding: "12px",

@@ -308,6 +308,13 @@ function FileList() {
                     className="fileCard">
 
                     <div className="fileContent">
+                      {file.is_pinned && (
+
+                        <span className="pin-badge">
+                          PINNED
+                        </span>
+
+                      )}
 
                       <div className="fileImage">📄</div>
 

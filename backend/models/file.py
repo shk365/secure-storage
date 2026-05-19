@@ -24,3 +24,5 @@ class File(db.Model):
     is_starred = db.Column(db.Boolean, default=False)
     is_shared = db.Column(db.Boolean, default=False)
     share_token = db.Column(db.String(200), unique=True, nullable=True)
+    pinata_cid = db.Column(db.String(255))
+    is_pinned = db.Column(db.Boolean, default=False)

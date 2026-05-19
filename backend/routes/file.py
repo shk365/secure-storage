@@ -19,6 +19,8 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # UPLOAD Route
+from utils.pinata import pin_cid
+import threading
 
 @file_bp.route("/upload", methods=["POST"])
 @jwt_required()
@@ -51,6 +53,12 @@ def upload_file():
     # Upload to IPFS
     cid = upload_to_ipfs(file_path)
 
+    # Upload to Pinata
+    threading.Thread(
+        target=pin_cid,
+        args=(cid,)
+    ).start()
+
     # Optionally delete local file
     os.remove(file_path)
 
@@ -62,7 +70,8 @@ def upload_file():
         owner_name="User",
         enc_key=secure_key,
         file_size=len(file_data),
-        file_type=file.content_type
+        file_type=file.content_type,
+        is_pinned=False
     )
 
     db.session.add(new_file)
@@ -497,7 +506,7 @@ def rename_file():
     # log activity
     activity = Activity(
         action="RENAME",
-        filename=f"{old_name} -> {new_name}",
+        filename=f"{old_name} to {new_name}",
         user_id=user_id
     )
 
