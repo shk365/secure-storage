@@ -10,6 +10,7 @@ from services.qr import generate_qr
 from services.key_manager import encrypt_key
 from config import MASTER_KEY
 from models.activity import Activity
+from models.user import User
 
 file_bp = Blueprint("file", __name__)
 
@@ -27,6 +28,7 @@ import threading
 def upload_file():
     
     user_id = get_jwt_identity()
+    user = User.query.get(user_id)
     
     if "file" not in request.files:
         return {"message": "No file provided"}, 400
@@ -67,7 +69,7 @@ def upload_file():
         filename=file.filename,
         cid=cid,
         owner_id=user_id,
-        owner_name="User",
+        owner_name=user.username,
         enc_key=secure_key,
         file_size=len(file_data),
         file_type=file.content_type,
@@ -314,78 +316,242 @@ def empty_bin():
 
     return {"message": "Bin emptied successfully"}
 
-# SHARE LINK
-import uuid
+# SHARE FILE VIA PUBLIC LINK
 
-@file_bp.route("/share/<int:file_id>", methods=["GET"])
+import secrets
+import io
+
+from flask import Blueprint, send_file
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity
+)
+
+from models.file import File
+from models.user import User
+
+from config import MASTER_KEY
+
+
+# CREATE SHARE LINK
+@file_bp.route(
+    "/share/<int:file_id>",
+    methods=["POST"]
+)
 @jwt_required()
-def share_file(file_id):
-    user_id = int(get_jwt_identity())
+def create_share_link(file_id):
 
-    file = File.query.get(file_id)
+    try:
 
-    if not file or file.owner_id != user_id:
-        return {"message": "Not allowed"}, 403
+        user_id = int(
+            get_jwt_identity()
+        )
 
-    if not file.share_token:
-        file.share_token = str(uuid.uuid4())
+        file = File.query.filter_by(
+            id=file_id,
+            owner_id=user_id
+        ).first()
+
+        if not file:
+
+            return {
+                "message":
+                    "File not found or unauthorized"
+            }, 404
+
+        import secrets
+
+        token = secrets.token_urlsafe(32)
+
+        file.share_token = token
+
+        file.is_public = True
+
         db.session.commit()
 
-    share_url = f"http://localhost:3000/share/{file.share_token}"
+        return {
 
-    return {
-        "share_url": share_url
-    }
+            "message":
+                "Share enabled",
 
-# PUBLIC DOWNLOAD ROUTE
-@file_bp.route("/public/<token>", methods=["GET"])
-def public_download(token):
-    file = File.query.filter_by(share_token=token).first()
+            "share_url":
+                f"http://localhost:3000/shared/{token}"
 
-    if not file:
-        return {"message": "Invalid link"}, 404
+        }
 
-    file_key = decrypt_key(file.enc_key, MASTER_KEY)
+    except Exception as e:
 
-    encrypted_data = download_from_ipfs(file.cid)
-    decrypted_data = decrypt_file(encrypted_data, file_key)
+        print("SHARE ERROR:", e)
 
-    return send_file(
-        io.BytesIO(decrypted_data),
-        as_attachment=True,
-        download_name=file.filename
-    )
+        return {
+            "message": str(e)
+        }, 500
 
-# TOGGLE SHARE
-from flask_jwt_extended import jwt_required, get_jwt_identity
-import uuid
 
-@file_bp.route("/toggle-share", methods=["POST"])
+# ACCESS SHARED FILE
+# PUBLIC ROUTE
+# NO JWT REQUIRED
+
+@file_bp.route(
+    "/shared/<token>",
+    methods=["GET"]
+)
+def access_shared_file(token):
+
+    try:
+        
+        # FIND FILE USING TOKEN
+        file = File.query.filter_by(
+            share_token=token,
+            is_public=True
+        ).first()
+        print(file.share_token)
+        print(file.is_public)
+        # INVALID TOKEN
+        if not file:
+
+            return {
+                "message":
+                    "Invalid or expired share link"
+            }, 404
+
+        # DOWNLOAD ENCRYPTED FILE
+        encrypted_data = download_from_ipfs(
+            file.cid
+        )
+
+        # DECRYPT FILE KEY
+        key = decrypt_key(
+            file.enc_key,
+            MASTER_KEY
+        )
+
+        # DECRYPT FILE
+        decrypted_data = decrypt_file(
+            encrypted_data,
+            key
+        )
+
+        # RETURN FILE
+        return send_file(
+
+            io.BytesIO(decrypted_data),
+
+            as_attachment=True,
+
+            download_name=file.filename,
+
+            mimetype=file.file_type
+        )
+
+    except Exception as e:
+
+        print("SHARE ERROR:", e)
+
+        return {
+            "message": str(e)
+        }, 500
+
+
+# OPTIONAL
+# DISABLE SHARE LINK
+
+@file_bp.route(
+    "/disable-share/<int:file_id>",
+    methods=["POST"]
+)
 @jwt_required()
-def toggle_share():
-    user_id = int(get_jwt_identity())
-    data = request.get_json()
+def disable_share(file_id):
 
-    file = File.query.get(data.get("file_id"))
+    try:
 
-    if not file or file.owner_id != user_id:
-        return {"message": "Not allowed"}, 403
+        user_id = int(get_jwt_identity())
 
-    file.is_shared = not file.is_shared
+        file = db.session.get(
+            File,
+            file_id
+        )
 
-    if file.is_shared:
-        if not file.share_token:
-            file.share_token = str(uuid.uuid4())
-    else:
+        if not file:
+
+            return {
+                "message":
+                    "File not found"
+            }, 404
+
+        if file.owner_id != user_id:
+
+            return {
+                "message":
+                    "Unauthorized"
+            }, 403
+
+        file.is_public = False
+
         file.share_token = None
 
-    db.session.commit()
+        db.session.commit()
 
-    return {
-        "enabled": file.is_shared,
-        "url": f"http://localhost:3000/share/{file.share_token}" if file.is_shared else None
-    }, 200
+        return {
+            "message":
+                "Share disabled"
+        }
 
+    except Exception as e:
+
+        return {
+            "message": str(e)
+        }, 500
+
+# GET PUBLIC SHARED FILES
+@file_bp.route(
+    "/public-shared",
+    methods=["GET"]
+)
+@jwt_required()
+def get_public_shared_files():
+
+    try:
+
+        user_id = get_jwt_identity()
+
+        files = File.query.filter_by(
+            owner_id=user_id,
+            is_public=True
+        ).all()
+
+        result = []
+
+        for file in files:
+
+            result.append({
+
+                "id": file.id,
+
+                "filename": file.filename,
+
+                "cid": file.cid,
+
+                "file_type": file.file_type,
+
+                "owner": file.owner_name,
+
+                "share_token": file.share_token,
+
+                "share_url":
+                    f"http://localhost:3000/shared/{file.share_token}"
+            })
+
+        return {
+            "files": result
+        }
+
+    except Exception as e:
+
+        return {
+            "message": str(e)
+        }, 500
+    
 
 # Share with people (using username)
 from models.user import User

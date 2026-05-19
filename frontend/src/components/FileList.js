@@ -14,10 +14,10 @@ function FileList() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [shareEnabled, setShareEnabled] = useState(false);
-  const [selectedFileId, setSelectedFileId] = useState(null);
+  const [selectedShareFile, setSelectedShareFile] = useState(null);
   const [isOn, setIsOn] = useState(false);
   const [menuOpen, setMenuOpen] = useState(null);
-  const [emails, setEmails] = useState("");
+  const [usernames, setUsernames] = useState("");
   const [peopleModal, setPeopleModal] = useState(false);
   const menuRef = useRef(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -123,49 +123,80 @@ function FileList() {
     }
   };
 
-  const handleShareLink = async (fileId) => {
-    setSelectedFileId(fileId);
+  const handleShareLink = async (file) => {
 
     try {
-      const res = await axios.get(
-        `http://127.0.0.1:5000/file/share/${fileId}`,
+
+      setSelectedShareFile(file);
+
+      const res = await axios.post(
+        `http://127.0.0.1:5000/file/share/${file.id}`,
+        {},
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization:
+              `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
 
-      setShareLink(res.data.url);
+      setShareEnabled(true);
+
+      setShareLink(res.data.share_url);
+
       setShareOpen(true);
 
     } catch (err) {
+
       console.error(err);
+
     }
   };
 
-  /* Toggle Sharing */
   const toggleShare = async () => {
+
     try {
-      const res = await axios.post(
-        "http://127.0.0.1:5000/file/toggle-share",
-        { file_id: selectedFileId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
 
-      setShareEnabled(res.data.enabled);
+      if (!shareEnabled) {
 
-      if (res.data.enabled) {
-        setShareLink(res.data.url);
+        const res = await axios.post(
+          `http://127.0.0.1:5000/file/share/${selectedShareFile.id}`,
+          {},
+          {
+            headers: {
+              Authorization:
+                `Bearer ${localStorage.getItem("token")}`
+            }
+          }
+        );
+
+        setShareLink(res.data.share_url);
+
+        setShareEnabled(true);
+
       } else {
+
+        await axios.post(
+          `http://127.0.0.1:5000/file/disable-share/${selectedShareFile.id}`,
+          {},
+          {
+            headers: {
+              Authorization:
+                `Bearer ${localStorage.getItem("token")}`
+            }
+          }
+        );
+
+        setShareEnabled(false);
+
         setShareLink("");
+
       }
+
     } catch (err) {
+
       console.error(err);
+
     }
   };
 
@@ -207,27 +238,65 @@ function FileList() {
     win.print();
   };
 
+  const [selectedFileId, setSelectedFileId] =
+    useState(null);
+
   const submitSharePeople = async () => {
-    const usersList = emails.split(",").map(e => e.trim());
 
-    await axios.post(
-      "http://127.0.0.1:5000/file/share-with",
-      {
-        file_id: selectedFileId,
-        usernames: usersList
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+    try {
+
+      console.log("FILE ID:", selectedFileId);
+
+      console.log("USERNAMES:", usernames);
+
+      const usersList =
+        usernames
+          .split(",")
+          .map(e => e.trim())
+          .filter(e => e !== "");
+
+      console.log("USERS LIST:", usersList);
+
+      const res = await axios.post(
+        "http://127.0.0.1:5000/file/share-with",
+        {
+          file_id: selectedFileId,
+          usernames: usersList
+        },
+        {
+          headers: {
+            Authorization:
+              `Bearer ${localStorage.getItem("token")}`
+          }
         }
-      }
-    );
+      );
 
-    alert("Shared!");
+      console.log(res.data);
+
+      alert("Shared!");
+
+      setPeopleModal(false);
+
+    } catch (err) {
+
+      console.error(err);
+
+      console.log(
+        err.response?.data
+      );
+
+      alert(
+        err.response?.data?.message ||
+        "Sharing failed"
+      );
+    }
   };
 
-  const openSharePeople = (fileId) => {
-    setSelectedFileId(fileId);
+  const openSharePeople = (file) => {
+    console.log("Selected File:", file);
+    console.log(file);
+    setSelectedFileId(file.id);
+
     setPeopleModal(true);
   };
 
@@ -348,8 +417,8 @@ function FileList() {
                             }>
                             Download
                           </div>
-                          <div className="dropDownMenuItems" onClick={() => { handleShareLink(file.id); setMenuOpen(null); }}>Share via Link or QR</div>
-                          <div className="dropDownMenuItems" onClick={() => { openSharePeople(file.id); setMenuOpen(null); }}>Share with others</div>
+                          <div className="dropDownMenuItems" onClick={() => { handleShareLink(file); setMenuOpen(null); }}>Share via Link or QR</div>
+                          <div className="dropDownMenuItems" onClick={() => { openSharePeople(file); setMenuOpen(null); }}>Share with others</div>
                           <div className="dropDownMenuItems" onClick={() => { toggleStar(file.id); setMenuOpen(null); }}>Add to Starred</div>
                           <div className="dropDownMenuItems" onClick={() => { openRename(file); setMenuOpen(null); }}>Rename</div>
                           <div className="dropDownMenuItems" onClick={() => { openDetails(file); setMenuOpen(null); }}>Details</div>
@@ -367,12 +436,13 @@ function FileList() {
                                 ✕
                               </button>
                             </div>
-                            <h3 className="fileNameInDialogBox" >Share {file.filename} with people</h3>
+                            <h3 className="fileNameInDialogBox" >Share {selectedShareFile?.filename} with people</h3>
 
                             <input
                               className="fileNameInDialogBox"
-                              placeholder="Enter emails (comma separated)"
-                              onChange={(e) => setEmails(e.target.value)}
+                              placeholder="Enter usernames (comma separated)"
+                              value={usernames}
+                              onChange={(e) => setUsernames(e.target.value)}
                             />
                             <br />
 
@@ -445,62 +515,137 @@ function FileList() {
                     <div className="overlayIcons">
                       <button className="iconButton" title="Download" onClick={() => handleDownload(file.cid)}>⬇️</button>
                       <button className="iconButton" title="Move to Bin" onClick={() => handleDelete(file.id)}>🗑️</button>
-                      <button className="iconButton" title="Share" onClick={() => handleShareLink(file.id)}>🔁</button>
+                      <button className="iconButton" title="Share" onClick={() => handleShareLink(file)}>🔁</button>
                     </div>
-                    {shareOpen && (
-                      <div style={modalOverlay}>
-                        <div style={modal}>
-                          {/* CLOSE */}
-                          <div style={{ textAlign: "right", marginBottom: "8px", paddingRight: "3px" }}>
-                            <button title="Close" style={closeBtn} onClick={() => setShareOpen(false)}>
-                              ✕
-                            </button>
-                          </div>
-                          {/* TOGGLE */}
-                          <div style={row}>
-                            <span style={{
-                              fontSize: "22px",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              paddingRight: "8px"
-                            }} title={file.filename}> Sharing {file.filename}</span>
-
-                            <label className="switch">
-                              <input
-                                type="checkbox"
-                                checked={shareEnabled}
-                                onChange={() => toggleShare()}
-                              />
-                              <span className="slider"></span>
-                            </label>
-                          </div>
-
-                          {/* LINK */}
-                          {shareEnabled && (
-                            <>
-                              <div style={linkBox}>
-                                <input value={shareLink} readOnly style={linkInput} />
-                                <button title="Copy Link" className="copyBtn" onClick={copyLink}>Copy</button>
-                              </div>
-
-                              {/* QR */}
-                              <div style={qrContainer}>
-                                <QRCodeCanvas value={shareLink} size={250} />
-
-                                <div style={qrButtons}>
-                                  <button title="Copy QR" className="copyBtn" onClick={copyQR}>Copy</button>
-                                  <button title="Print QR" className="copyBtn" onClick={printQR}>Print</button>
-                                </div>
-                              </div>
-                            </>
-                          )}
-
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
+                {/* LINK */}
+                {shareOpen && (
+
+                  <div style={modalOverlay}>
+
+                    <div style={modal}>
+
+                      {/* CLOSE */}
+                      <div
+                        style={{
+                          textAlign: "right",
+                          marginBottom: "8px",
+                        }}
+                      >
+
+                        <button
+                          title="Close"
+                          style={closeBtn}
+                          onClick={() => setShareOpen(false)}
+                        >
+                          ✕
+                        </button>
+
+                      </div>
+
+                      {/* HEADER */}
+                      <div style={row}>
+
+                        <span
+                          style={{
+                            fontSize: "22px",
+                            fontWeight: "600",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            paddingRight: "12px",
+                            maxWidth: "70%"
+                          }}
+                          title={selectedShareFile?.filename}
+                        >
+
+                          Sharing {selectedShareFile?.filename}
+
+                        </span>
+
+                        {/* TOGGLE */}
+                        <label className="switch">
+
+                          <input
+                            type="checkbox"
+                            checked={shareEnabled}
+                            onChange={() => toggleShare()}
+                          />
+
+                          <span className="slider"></span>
+
+                        </label>
+
+                      </div>
+
+                      {/* SHARE CONTENT */}
+                      {shareEnabled && (
+
+                        <div
+                          style={{
+                            marginTop: "25px"
+                          }}
+                        >
+
+                          {/* LINK */}
+                          <div style={linkBox}>
+
+                            <input
+                              value={shareLink}
+                              readOnly
+                              style={linkInput}
+                            />
+
+                            <button
+                              title="Copy Link"
+                              className="copyBtn"
+                              onClick={copyLink}
+                            >
+                              Copy
+                            </button>
+
+                          </div>
+
+                          {/* QR */}
+                          <div style={qrContainer}>
+
+                            <QRCodeCanvas
+                              value={shareLink}
+                              size={220}
+                            />
+
+                            <div style={qrButtons}>
+
+                              <button
+                                title="Copy QR"
+                                className="copyBtn"
+                                onClick={copyQR}
+                              >
+                                Copy QR
+                              </button>
+
+                              <button
+                                title="Print QR"
+                                className="copyBtn"
+                                onClick={printQR}
+                              >
+                                Print QR
+                              </button>
+
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
               </div>
             </div >
           </div >
@@ -536,10 +681,21 @@ const modalOverlay = {
 };
 
 const modal = {
+
   background: "#fff",
-  padding: "0 0 20px 20px",
-  borderRadius: "10px",
-  width: "500px",
+
+  borderRadius: "20px",
+
+  padding: "24px",
+
+  width: "520px",
+
+  maxWidth: "95vw",
+
+  boxShadow:
+    "0 10px 40px rgba(0,0,0,0.15)",
+
+  position: "relative"
 };
 
 const row = {
@@ -550,18 +706,31 @@ const row = {
 };
 
 const linkBox = {
+
   display: "flex",
-  gap: "8px",
-  marginBottom: "10px",
-  paddingRight: "20px",
+
+  alignItems: "center",
+
+  gap: "10px",
+
+  width: "100%"
 };
 
 const linkInput = {
+
   flex: 1,
-  padding: "5px",
-  border: "1px solid #d5d5d5",
-  borderRadius: "5px",
-  fontSize: "16px",
+
+  padding: "10px 14px",
+
+  borderRadius: "10px",
+
+  border: "1px solid #ddd",
+
+  fontSize: "14px",
+
+  overflow: "hidden",
+
+  textOverflow: "ellipsis"
 };
 
 const dropdown = {
@@ -581,9 +750,18 @@ const dropdown = {
 };
 
 const qrContainer = {
-  position: "relative",
-  textAlign: "center",
-  paddingRight: "20px",
+
+  marginTop: "25px",
+
+  display: "flex",
+
+  flexDirection: "column",
+
+  alignItems: "center",
+
+  justifyContent: "center",
+
+  gap: "16px"
 };
 
 const qrButtons = {

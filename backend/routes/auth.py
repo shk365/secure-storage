@@ -57,7 +57,8 @@ def login():
 
     return jsonify({
         "message": "Login successful",
-        "token": access_token
+        "token": access_token,
+        "username": username
         })
 
 # PROFILE

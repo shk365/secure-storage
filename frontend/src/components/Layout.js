@@ -3,8 +3,15 @@ import { useState } from "react";
 import useAutoLogout from "./useAutoLogout";
 import axios from "axios";
 import MessageBox from "./MessageBox";
+import "../styles/Layout.css";
+
+
+  
 
 function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
+  console.log("Layout rendering");
+  const username = localStorage.getItem("username");
+  console.log("Username:", username);
   const [message, setMessage] = useState("");
   useAutoLogout(setMessage);
   const location = useLocation();
@@ -133,6 +140,12 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
             <h1 style={{ margin: 0 }}>Secure Storage</h1>
 
             <div style={{ display: "flex", gap: "10px" }}>
+
+
+              <div className="user-avatar" title={username}>
+                {username?.charAt(0).toUpperCase()}
+
+              </div>
 
               <button
                 className="logoutBtn"

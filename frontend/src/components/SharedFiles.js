@@ -8,10 +8,12 @@ function SharedFiles() {
     const [filterType, setFilterType] = useState("all");
     const [sortBy, setSortBy] = useState("latest");
     const [menuOpen, setMenuOpen] = useState(null);
+    const [publicFiles, setPublicFiles] = useState([]);
     const menuRef = useRef(null);
 
     useEffect(() => {
         fetchShared();
+        fetchPublicShared();
 
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -39,6 +41,28 @@ function SharedFiles() {
             setFiles(res.data.files);
         } catch (err) {
             console.error(err);
+        }
+    };
+    const fetchPublicShared = async () => {
+
+        try {
+
+            const res = await axios.get(
+                "http://127.0.0.1:5000/file/public-shared",
+                {
+                    headers: {
+                        Authorization:
+                            `Bearer ${localStorage.getItem("token")}`,
+                    },
+                }
+            );
+
+            setPublicFiles(res.data.files);
+
+        } catch (err) {
+
+            console.error(err);
+
         }
     };
 
@@ -89,7 +113,6 @@ function SharedFiles() {
                 <button title="Images" className="fileTypeFilterBtn" onClick={() => setFilterType("image")}>IMAGES</button>
                 <button title="PDF" className="fileTypeFilterBtn" onClick={() => setFilterType("pdf")}>PDF</button>
             </div>
-
             {/* FILE GRID */}
             <div style={container}>
                 {files.length === 0 ? (

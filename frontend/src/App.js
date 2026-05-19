@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SharedFiles from "./components/SharedFiles";
+import SharedFile from "./components/SharedFile";
 import StarredPage from "./pages/StarredPage";
 import IPFSStatus from "./pages/IPFSStatus";
 import IPFSPeers from "./pages/IPFSPeers";
@@ -35,6 +36,10 @@ function App() {
           <Route path="activity" element={<ActivityPage />} />
           <Route path="upload" element={<UploadPage />} />
           <Route path="/shared" element={<SharedFiles />} />
+          <Route
+            path="/shared/:token"
+            element={<SharedFile />}
+          />
           <Route path="/starred" element={<StarredPage />} />
           <Route path="bin" element={<BinPage />} />
           <Route path="/ipfs-status" element={<IPFSStatus />} />

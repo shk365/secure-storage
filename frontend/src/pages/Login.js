@@ -18,7 +18,8 @@ function Login({ onLogin, onSwitch }) {
 
             // save token
             localStorage.setItem("token", token);
-
+            localStorage.setItem("username", res.data.username);
+            console.log("Login successful, token stored:", token, "Username:", res.data.username);
             // notify app
             onLogin(token);
 
@@ -33,34 +34,34 @@ function Login({ onLogin, onSwitch }) {
             <div style={card}>
                 <h2>Login</h2>
                 <form>
-                <input
-                    style={input}
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
+                    <input
+                        style={input}
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
 
-                <input
-                    style={input}
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <input
+                        style={input}
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
-                <button style={button} onClick={handleLogin}>
-                    Login
-                </button>
+                    <button style={button} onClick={handleLogin}>
+                        Login
+                    </button>
                 </form>
                 <p>{message}</p>
                 <p style={{ marginTop: "10px", textAlign: "Center" }}>
-                New user?{" "}
-                <span style={link} onClick={onSwitch}>
-                    Register
-                </span>
-            </p>
+                    New user?{" "}
+                    <span style={link} onClick={onSwitch}>
+                        Register
+                    </span>
+                </p>
             </div>
-            
+
         </div>
     );
 }
@@ -100,9 +101,9 @@ const button = {
 };
 
 const link = {
-  color: "#4c6daf",
-  cursor: "pointer",
-  fontWeight: "bold",
+    color: "#4c6daf",
+    cursor: "pointer",
+    fontWeight: "bold",
 };
 
 export default Login;
