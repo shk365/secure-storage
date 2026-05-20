@@ -20,7 +20,7 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # UPLOAD Route
-from utils.pinata import pin_cid
+from utils.pinata import upload_to_pinata
 import threading
 
 @file_bp.route("/upload", methods=["POST"])
@@ -54,15 +54,14 @@ def upload_file():
 
     # Upload to IPFS
     cid = upload_to_ipfs(file_path)
+    print(f"File uploaded to IPFS with CID: {cid}")
 
     # Upload to Pinata
     threading.Thread(
-        target=pin_cid,
-        args=(cid,)
+        target=upload_to_pinata,
+        args=(file_path,)
     ).start()
-
-    # Optionally delete local file
-    os.remove(file_path)
+    print(f"Started uploading {cid} to Pinata in background")
 
     # Save metadata in DB
     new_file = File(
@@ -118,6 +117,7 @@ def download_file():
     file = File.query.filter_by(cid=cid).first()
 
     if not file:
+        print(f"File with CID {cid} not found in database")
         return {"message": "File not found"}, 404
     
     # Access check
@@ -127,7 +127,7 @@ def download_file():
     ).first()
 
     public_access = file.is_shared
-
+    print(f"Public access: {public_access}")
     if file.owner_id != user_id and not is_shared_user and not public_access:
         return {"message": "Access denied"}, 403
 
@@ -136,7 +136,7 @@ def download_file():
 
     encrypted_data = download_from_ipfs(cid)
     decrypted_data = decrypt_file(encrypted_data, file_key)
-
+    print(f"File {file.filename} downloaded and decrypted successfully")
      # Log activity
     activity = Activity(
         action="DOWNLOAD",
@@ -631,16 +631,28 @@ def get_shared():
     return {"files": result}
 
 # Star / Unstar
-@file_bp.route("/star", methods=["POST"])
+@file_bp.route("/star/<int:file_id>", methods=["PUT"])
 @jwt_required()
-def toggle_star():
-    data = request.get_json()
-    file = File.query.get(data["id"])
+def toggle_star(file_id):
+
+    user_id = get_jwt_identity()
+
+    file = File.query.filter_by(
+        id=file_id,
+        owner_id=user_id
+    ).first()
+
+    if not file:
+        return {"message": "File not found"}, 404
 
     file.is_starred = not file.is_starred
+
     db.session.commit()
 
-    return {"starred": file.is_starred}
+    return {
+        "message": "Updated",
+        "is_starred": file.is_starred
+    }, 200
 
 # RENAME FILE
 @file_bp.route("/rename", methods=["POST"])
