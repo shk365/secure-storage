@@ -34,6 +34,7 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
 
     setUploadingFile(file.name);
     setProgress(0);
+    setMessage("Uploading...");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -62,11 +63,13 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
       setTimeout(() => {
         setUploadingFile(null);
         setProgress(0);
-      }, 1500);
+      }, 100);
       setRefreshTrigger(prev => prev + 1);
+      setMessage("Upload Complete");
     } catch (err) {
       console.error(err);
       setUploadingFile(null);
+      setMessage("Upload Failed");
     }
   };
 

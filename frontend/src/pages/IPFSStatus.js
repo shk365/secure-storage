@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 
 import "../styles/IPFSStatus.css";
+import {
+    getNodeInfo,
+    getPeers,
+    getBandwidthStats
+} from "../services/ipfsService";
 
 import {
     AreaChart,
@@ -13,11 +18,7 @@ import {
     CartesianGrid,
 } from "recharts";
 
-import {
-    getNodeInfo,
-    getPeers,
-    getBandwidthStats
-} from "../services/ipfsService";
+
 
 function IPFSStatus() {
 

@@ -103,8 +103,8 @@ function PeerMap() {
                             <Geography
                                 key={geo.rsmKey}
                                 geography={geo}
-                                fill="#e5e7eb"
-                                stroke="#d1d5db"
+                                fill="#989898"
+                                stroke="#989898"
                                 strokeWidth={0.5}
                             />
                         ))

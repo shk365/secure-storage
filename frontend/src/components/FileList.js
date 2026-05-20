@@ -4,6 +4,7 @@ import axios from "axios";
 import "../index.css";
 import { QRCodeCanvas } from "qrcode.react";
 import RenameDialog from "./RenameDialog";
+import MessageBox from "./MessageBox";
 
 function FileList() {
   const { refreshTrigger } = useOutletContext();
@@ -23,6 +24,7 @@ function FileList() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [message, setMessage] = useState("");
 
   const openRename = (file) => {
     setSelectedFile(file);
@@ -46,13 +48,14 @@ function FileList() {
 
   }, [refreshTrigger]);
 
-  const handleDownload = async (cid) => {
+  const handleDownload = async (file) => {
     try {
       const token = localStorage.getItem("token");
+      setMessage(`Downloading ${file.filename}`);
 
       const res = await axios.post(
         "http://127.0.0.1:5000/file/download",
-        { cid },
+        { cid: file.cid },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -81,9 +84,17 @@ function FileList() {
 
       document.body.appendChild(link);
       link.click();
+      setMessage("Download Complete");
+      setTimeout(() => {
+        setMessage("");
+      }, 1000);
 
     } catch (err) {
       console.error(err);
+      setMessage("Download Failed");
+      setTimeout(() => {
+        setMessage("");
+      }, 1000);
     }
   };
 
@@ -215,7 +226,7 @@ function FileList() {
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareLink);
-    alert("Link copied!");
+    setMessage("Link copied!");
   };
 
   const copyQR = async () => {
@@ -225,17 +236,56 @@ function FileList() {
       await navigator.clipboard.write([
         new ClipboardItem({ "image/png": blob }),
       ]);
-      alert("QR copied!");
+      setMessage("QR copied!");
     });
   };
 
   const printQR = () => {
     const canvas = document.querySelector("canvas");
-    const dataUrl = canvas.toDataURL();
 
-    const win = window.open();
-    win.document.write(`<img src="${dataUrl}" />`);
-    win.print();
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL("image/png");
+
+    const win = window.open("", "_blank");
+
+    win.document.write(`
+        <html>
+            <head>
+                <title>Print QR</title>
+                <style>
+                    body{
+                        display:flex;
+                        justify-content:center;
+                        align-items:center;
+                        height:100vh;
+                        margin:0;
+                    }
+
+                    img{
+                        width:300px;
+                        height:300px;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <img id="qrImage" src="${dataUrl}" />
+            </body>
+        </html>
+    `);
+
+    win.document.close();
+
+    const img = win.document.getElementById("qrImage");
+
+    img.onload = () => {
+      win.focus();
+      win.print();
+
+      // Optional auto close
+      win.close();
+    };
   };
 
   const [selectedFileId, setSelectedFileId] =
@@ -275,6 +325,8 @@ function FileList() {
 
       alert("Shared!");
 
+      setMessage("Shared!");
+
       setPeopleModal(false);
 
     } catch (err) {
@@ -301,19 +353,25 @@ function FileList() {
   };
 
   const toggleStar = async (fileId) => {
+
     try {
-      await axios.post(
-        "http://127.0.0.1:5000/file/star",
-        { id: fileId },
+
+      await axios.put(
+        `http://127.0.0.1:5000/file/star/${fileId}`,
+        {},
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
+
       fetchFiles();
+
     } catch (err) {
+
       console.error(err);
+
     }
   };
 
@@ -331,6 +389,7 @@ function FileList() {
 
   return (
     <div>
+      <MessageBox message={message} onClose={() => setMessage("")} />
       <div style={{ textAlign: "center" }}>
         <input
           className="searchBar"
@@ -389,7 +448,7 @@ function FileList() {
 
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
 
-                        <p className="fileName" title={file.filename}>{file.filename}</p>
+                        <p className="fileName" title={file.filename}>{file.is_starred ? "⭐ " : ""}{file.filename}</p>
                         <button style={{
                           background: "white",
                           border: "0px",
@@ -411,7 +470,7 @@ function FileList() {
                           <div
                             className="dropDownMenuItems"
                             onClick={() => {
-                              handleDownload(file.cid);
+                              handleDownload(file);
                               setMenuOpen(null);
                             }
                             }>
@@ -419,7 +478,7 @@ function FileList() {
                           </div>
                           <div className="dropDownMenuItems" onClick={() => { handleShareLink(file); setMenuOpen(null); }}>Share via Link or QR</div>
                           <div className="dropDownMenuItems" onClick={() => { openSharePeople(file); setMenuOpen(null); }}>Share with others</div>
-                          <div className="dropDownMenuItems" onClick={() => { toggleStar(file.id); setMenuOpen(null); }}>Add to Starred</div>
+                          <div className="dropDownMenuItems" onClick={() => { toggleStar(file.id); setMenuOpen(null); }}>{file.is_starred ? "Unstar" : "Add to Starred"}</div>
                           <div className="dropDownMenuItems" onClick={() => { openRename(file); setMenuOpen(null); }}>Rename</div>
                           <div className="dropDownMenuItems" onClick={() => { openDetails(file); setMenuOpen(null); }}>Details</div>
                           <div className="dropDownMenuItems" onClick={() => { handleDelete(file.id); setMenuOpen(null); }}>Move to Bin</div>
@@ -513,9 +572,11 @@ function FileList() {
                     </div>
 
                     <div className="overlayIcons">
-                      <button className="iconButton" title="Download" onClick={() => handleDownload(file.cid)}>⬇️</button>
+                      <button className="iconButton" title="Download" onClick={() => handleDownload(file)}>⬇️</button>
                       <button className="iconButton" title="Move to Bin" onClick={() => handleDelete(file.id)}>🗑️</button>
-                      <button className="iconButton" title="Share" onClick={() => handleShareLink(file)}>🔁</button>
+                      <button className="iconButton" title={file.is_starred ? "Unstar" : "Star"} onClick={() => toggleStar(file.id)}>
+                        {file.is_starred ? "⭐" : "☆"}
+                      </button>
                     </div>
                   </div>
                 ))}

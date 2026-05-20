@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "../index.css";
+import MessageBox from "./MessageBox";
 
 function SharedFiles() {
     const [files, setFiles] = useState([]);
@@ -10,11 +11,10 @@ function SharedFiles() {
     const [menuOpen, setMenuOpen] = useState(null);
     const [publicFiles, setPublicFiles] = useState([]);
     const menuRef = useRef(null);
+    const [message, setMessage] = useState("")
 
     useEffect(() => {
         fetchShared();
-        fetchPublicShared();
-
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
                 setMenuOpen(null);
@@ -28,6 +28,7 @@ function SharedFiles() {
 
     // 🔹 Fetch shared files
     const fetchShared = async () => {
+        setMessage("Fetching Shared Files")
         try {
             const res = await axios.get(
                 "http://127.0.0.1:5000/file/shared",
@@ -39,39 +40,21 @@ function SharedFiles() {
             );
 
             setFiles(res.data.files);
+            setMessage("Files Fetched")
         } catch (err) {
             console.error(err);
-        }
-    };
-    const fetchPublicShared = async () => {
-
-        try {
-
-            const res = await axios.get(
-                "http://127.0.0.1:5000/file/public-shared",
-                {
-                    headers: {
-                        Authorization:
-                            `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
-
-            setPublicFiles(res.data.files);
-
-        } catch (err) {
-
-            console.error(err);
-
+            setMessage(`Failed to fetch shared files: ${err.message}`)
         }
     };
 
-    // 🔹 Download
-    const handleDownload = async (cid) => {
+    // Download
+    const handleDownload = async (file) => {
+        setMessage(`Downloading ${file.filename}`);
         try {
+
             const res = await axios.post(
                 "http://127.0.0.1:5000/file/download",
-                { cid },
+                { cid: file.cid },
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -81,18 +64,37 @@ function SharedFiles() {
             );
 
             const url = window.URL.createObjectURL(new Blob([res.data]));
+            const contentDisposition = res.headers["content-disposition"];
+            console.log(res.headers);
+
+
+            let filename = "file";
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\n]+)/);
+                if (match?.[1]) {
+                    filename = decodeURIComponent(match[1]).trim();
+                }
+            }
+            console.log("HEADER:", contentDisposition);
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "file");
+            link.setAttribute("download", file.filename || filename);
             document.body.appendChild(link);
             link.click();
+            window.URL.revokeObjectURL(url);
+            setMessage(`Downloaded ${file.filename}`)
         } catch (err) {
             console.error(err);
+            setMessage(`Failed to download ${file.filename}`)
         }
     };
 
     return (
         <div>
+            <MessageBox
+                message={message}
+                onClose={() => setMessage("")}
+            />
             {/* SEARCH */}
             <div style={{ textAlign: "center" }}>
                 <input
@@ -177,7 +179,7 @@ function SharedFiles() {
 
                                         {menuOpen === file.id && (
                                             <div ref={menuRef} style={dropdown}>
-                                                <div onClick={() => handleDownload(file.cid)}>
+                                                <div onClick={() => handleDownload(file)}>
                                                     Download
                                                 </div>
                                             </div>
@@ -186,7 +188,7 @@ function SharedFiles() {
 
                                     {/* QUICK ACTIONS */}
                                     <div className="overlayIcons">
-                                        <button title="Download" className="iconButton" onClick={() => handleDownload(file.cid)}>
+                                        <button title="Download" className="iconButton" onClick={() => handleDownload(file)}>
                                             ⬇️
                                         </button>
                                     </div>
