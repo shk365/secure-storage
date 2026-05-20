@@ -1,43 +1,67 @@
 import requests
-from dotenv import load_dotenv
 import os
-from models.file import File
-from extensions import db
+from dotenv import load_dotenv
 
 load_dotenv()
+
 PINATA_JWT = os.getenv("PINATA_JWT")
 
 
-def pin_cid(cid):
+def upload_to_pinata(file_path):
 
-    url = (
-        "https://api.pinata.cloud/"
-        "pinning/pinByHash"
-    )
+    url = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 
     headers = {
-        "Authorization":
-            f"Bearer {PINATA_JWT}"
+        "Authorization": f"Bearer {PINATA_JWT}"
     }
 
-    data = {
-        "hashToPin": cid
-    }
+    filename = os.path.basename(file_path)
 
-    response = requests.post(
-        url,
-        json=data,
-        headers=headers
-    )
+    try:
 
-    if response.status_code == 200:
+        with open(file_path, "rb") as f:
 
-        file = File.query.filter_by(
-            cid=cid
-        ).first()
+            files = {
+                "file": (
+                    filename,
+                    f,
+                    "application/octet-stream"
+                )
+            }
 
-        if file:
+            response = requests.post(
+                url,
+                files=files,
+                headers=headers
+            )
 
-            file.is_pinned = True
+        # FILE IS CLOSED HERE
 
-            db.session.commit()
+        if response.status_code == 200:
+
+            data = response.json()
+
+            cid = data["IpfsHash"]
+
+            print(f"Uploaded to Pinata: {cid}")
+
+        else:
+
+            print("Pinata Upload Failed")
+            print(response.text)
+
+    except Exception as e:
+
+        print(f"Pinata upload error: {e}")
+
+    finally:
+
+        # SAFE TO DELETE HERE
+        if os.path.exists(file_path):
+
+            try:
+                os.remove(file_path)
+                print(f"Deleted temp file: {file_path}")
+
+            except Exception as e:
+                print(f"Failed to delete temp file: {e}")
