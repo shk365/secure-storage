@@ -6,7 +6,7 @@ import MessageBox from "./MessageBox";
 import "../styles/Layout.css";
 
 
-  
+
 
 function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
   console.log("Layout rendering");
@@ -27,6 +27,7 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
     { path: "/ipfs-peers", icon: "👥", name: "IPFS Peers" },
   ];
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
   const [dragging, setDragging] = useState(false);
   const handleUpload = async (file) => {
@@ -35,6 +36,8 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
     setUploadingFile(file.name);
     setProgress(0);
     setMessage("Uploading...");
+    if (uploading) return;
+    setUploading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -51,11 +54,13 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
             const percent = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
+            setMessage("Encrypting File...")
             setProgress(percent);
           },
         }
       );
-
+      
+      setMessage("Uploading to IPFS & Pinata...")
       setProgress(100);
 
       onUploadComplete();
@@ -63,6 +68,7 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
       setTimeout(() => {
         setUploadingFile(null);
         setProgress(0);
+        setUploading(false);
       }, 100);
       setRefreshTrigger(prev => prev + 1);
       setMessage("Upload Complete");
@@ -175,6 +181,7 @@ function Layout({ onUploadComplete, setUploadingFile, setProgress, children }) {
               <button
                 style={newBtn}
                 onClick={() => document.getElementById("fileInput").click()}
+                disabled={uploading}
               >+ Add / Upload
               </button>
 
