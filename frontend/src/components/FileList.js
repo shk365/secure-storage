@@ -51,7 +51,7 @@ function FileList() {
   const handleDownload = async (file) => {
     try {
       const token = localStorage.getItem("token");
-      setMessage(`Downloading ${file.filename}`);
+      setMessage(`Downloading ${file.filename} from IPFS ...`);
 
       const res = await axios.post(
         "http://127.0.0.1:5000/file/download",
@@ -99,6 +99,7 @@ function FileList() {
   };
 
   const handleDelete = async (id) => {
+    setMessage("Moving file to Bin...");
     try {
       const token = localStorage.getItem("token");
 
@@ -120,6 +121,7 @@ function FileList() {
 
   const fetchFiles = async () => {
     try {
+      setMessage("Fetching files from IPFS / Pinata...");
       const res = await axios.get(
         "http://127.0.0.1:5000/file/my-files",
         {
@@ -129,6 +131,7 @@ function FileList() {
         }
       );
       setFiles(res.data.files);
+      setMessage("Files Fetched");
     } catch (err) {
       console.error(err);
     }
@@ -226,7 +229,7 @@ function FileList() {
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareLink);
-    setMessage("Link copied!");
+    setMessage("Link Copied!");
   };
 
   const copyQR = async () => {
@@ -322,8 +325,6 @@ function FileList() {
       );
 
       console.log(res.data);
-
-      alert("Shared!");
 
       setMessage("Shared!");
 
@@ -546,7 +547,7 @@ function FileList() {
                               <div style={cidBox}>{selectedFile.cid}</div>
                               <button
                                 className="copyBtn"
-                                onClick={() => navigator.clipboard.writeText(selectedFile.cid)}
+                                onClick={() => { navigator.clipboard.writeText(selectedFile.cid); setMessage("CID Copied!")}}
                               >
                                 Copy CID
                               </button>
@@ -621,7 +622,7 @@ function FileList() {
                           title={selectedShareFile?.filename}
                         >
 
-                          Sharing {selectedShareFile?.filename}
+                          Share {selectedShareFile?.filename}
 
                         </span>
 
@@ -836,8 +837,7 @@ const qrButtons = {
 };
 
 const closeBtn = {
-  margin: "10px",
-  padding: "5px",
+  marginBottom: "12px",
   background: "#ffffff",
   border: "0px solid ",
   color: "black",
