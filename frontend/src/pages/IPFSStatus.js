@@ -216,15 +216,30 @@ function IPFSStatus() {
                                 <AreaChart
                                     data={chartData}
                                 >
+                                    <CartesianGrid
+                                        strokeDasharray="3 3"
+                                        opacity={0.2}
+                                    />
 
                                     <XAxis
                                         dataKey="time"
-                                        hide
+                                        tick={{
+                                            fontSize: 12,
+                                            fill: "#64748b"
+                                        }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        minTickGap={20}
                                     />
 
                                     <YAxis />
 
                                     <Tooltip />
+
+                                    <ReferenceLine
+                                        y={0}
+                                        stroke="#94a3b8"
+                                    />
 
                                     <Area
                                         type="monotone"

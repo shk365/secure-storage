@@ -316,11 +316,27 @@ function IPFSPeers() {
                             <tr className="bg-gray-100">
 
                                 <th className="p-2 border">
+                                    Status
+                                </th>
+
+                                <th className="p-2 border">
                                     Peer ID
                                 </th>
 
                                 <th className="p-2 border">
-                                    Address
+                                    IP Address
+                                </th>
+
+                                <th className="p-2 border">
+                                    IP Version
+                                </th>
+
+                                <th className="p-2 border">
+                                    Port
+                                </th>
+
+                                <th className="p-2 border">
+                                    Protocol
                                 </th>
 
                                 <th className="p-2 border">
@@ -330,6 +346,7 @@ function IPFSPeers() {
                                 <th className="p-2 border">
                                     Direction
                                 </th>
+
 
                             </tr>
 
@@ -341,12 +358,50 @@ function IPFSPeers() {
 
                                 <tr key={index}>
 
-                                    <td className="p-2 border text-xs">
-                                        {peer.Peer}
+                                    <td className="flex items-center gap-2">
+                                        🟢 Connected
+                                    </td>
+
+                                    <td className="p-2 border text-xs" title={peer.Peer}>
+                                        {peer.Peer.slice(0, 20) + "..."}
                                     </td>
 
                                     <td className="p-2 border text-xs">
-                                        {peer.Addr}
+                                        {
+                                            peer.Addr?.match(/ip4\/([0-9.]+)/)?.[1] ||
+                                            peer.Addr?.match(/ip6\/([a-fA-F0-9:]+)/)?.[1] ||
+                                            "Unknown"
+                                        }
+                                    </td>
+
+                                    <td className="p-2 border text-xs">
+                                        {
+                                            peer.Addr?.includes("/ip4/")
+                                                ? "IPv4"
+                                                : peer.Addr?.includes("/ip6/")
+                                                    ? "IPv6"
+                                                    : "Unknown"
+                                        }
+                                    </td>
+
+                                    <td className="p-2 border text-xs">
+                                        {
+                                            peer.Addr?.match(/tcp\/(\d+)/)?.[1] ||
+                                            peer.Addr?.match(/udp\/(\d+)/)?.[1] ||
+                                            "Unknown"
+                                        }
+                                    </td>
+
+                                    <td className="p-2 border text-xs">
+                                        {peer.Addr?.includes("/quic")
+                                            ? "QUIC"
+                                            : peer.Addr?.includes("/ws")
+                                                ? "WebSocket"
+                                                : peer.Addr?.includes("/tcp")
+                                                    ? "TCP"
+                                                    : peer.Addr?.includes("/webrtc")
+                                                        ? "WebRTC"
+                                                        : "Unknown"}
                                     </td>
 
                                     <td className="p-2 border text-xs">
@@ -354,8 +409,11 @@ function IPFSPeers() {
                                     </td>
 
                                     <td className="p-2 border text-xs">
-                                        {peer.Direction}
+                                        {peer.Direction === 1
+                                            ? "Inbound"
+                                            : "Outbound"}
                                     </td>
+
 
                                 </tr>
 

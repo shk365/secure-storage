@@ -59,6 +59,7 @@ function PeerMap() {
 
                     if (geo.lat && geo.lon) {
                         locations.push({
+                            ip: ip,
                             coordinates: [
                                 geo.lon,
                                 geo.lat
@@ -70,7 +71,17 @@ function PeerMap() {
                 }
             }
 
-            setMarkers(locations);
+            setMarkers(prev => {
+                const existing = new Map(
+                    prev.map(marker => [marker.ip, marker])
+                );
+
+                locations.forEach(marker => {
+                    existing.set(marker.ip, marker);
+                });
+
+                return Array.from(existing.values());
+            });
         } catch (err) {
             console.error(err);
         }
@@ -81,7 +92,7 @@ function PeerMap() {
             style={{
                 width: "100%",
                 height: "600px",
-                background: "#f5f5f5",
+                background: "#ffffff",
                 position: "relative",
                 overflow: "hidden",
                 borderRadius: "12px",
