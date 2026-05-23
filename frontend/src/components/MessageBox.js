@@ -29,7 +29,7 @@ const box = {
   color: "#fff",
   padding: "10px 20px",
   borderRadius: "8px",
-  zIndex: 9999,
+  zIndex: 99999,
 };
 
 export default MessageBox;
