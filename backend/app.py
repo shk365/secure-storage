@@ -12,6 +12,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 migrate = Migrate(app, db)
+geo_cache = {}
 
 CORS(app)
 
@@ -37,29 +38,32 @@ def home():
     return {"message": "API Running 🚀"}
 
 @app.route("/api/ipfs/geolocation/<ip>")
-def get_ip_geolocation(ip):
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
+def geolocation(ip):
 
+    # CHECK CACHE FIRST
+    if ip in geo_cache:
+        return jsonify(geo_cache[ip])
+
+    try:
         response = requests.get(
             f"http://ip-api.com/json/{ip}",
-            headers=headers,
-            timeout=5
+            timeout=10
         )
 
         data = response.json()
 
-        print(data)
+        # SAVE TO CACHE
+        geo_cache[ip] = data
 
         return jsonify(data)
 
     except Exception as e:
         print("GeoIP Error:", e)
+
         return jsonify({
-            "error": str(e)
-        }), 500
+            "success": False,
+            "message": "Geo lookup failed"
+        }), 200
 
 if __name__ == "__main__":
     with app.app_context():
