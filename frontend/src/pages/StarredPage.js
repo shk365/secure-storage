@@ -43,11 +43,11 @@ function StarredPage() {
         }
     };
 
-    const handleDownload = async (cid) => {
+    const handleDownload = async (file) => {
         try {
             const res = await axios.post(
                 "http://127.0.0.1:5000/file/download",
-                { cid },
+                { cid: file.cid },
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -59,7 +59,7 @@ function StarredPage() {
             const url = window.URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", "file");
+            link.setAttribute("download", file.filename);
             document.body.appendChild(link);
             link.click();
 
@@ -86,19 +86,25 @@ function StarredPage() {
     };
 
     const toggleStar = async (fileId) => {
+
         try {
-            await axios.post(
-                "http://127.0.0.1:5000/file/star",
-                { id: fileId },
+
+            await axios.put(
+                `http://127.0.0.1:5000/file/star/${fileId}`,
+                {},
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }
             );
-            fetchFiles(); // refresh
+
+            fetchFiles();
+
         } catch (err) {
+
             console.error(err);
+
         }
     };
 
@@ -164,7 +170,7 @@ function StarredPage() {
                                         <div className="fileImage">📄</div>
 
                                         <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                            <p className="fileName">{file.filename}</p>
+                                            <p className="fileName">{"⭐"}{file.filename}</p>
 
                                             <button
                                                 style={{
@@ -185,7 +191,7 @@ function StarredPage() {
 
                                         {menuOpen === file.id && (
                                             <div ref={menuRef} style={dropdown}>
-                                                <div className="dropDownMenuItems" onClick={() => handleDownload(file.cid)}>Download</div>
+                                                <div className="dropDownMenuItems" onClick={() => handleDownload(file)}>Download</div>
                                                 <div className="dropDownMenuItems" onClick={() => toggleStar(file.id)}>
                                                     Remove from Starred
                                                 </div>
@@ -197,8 +203,8 @@ function StarredPage() {
                                     </div>
 
                                     <div className="overlayIcons">
-                                        <button title="Download" className="iconButton" onClick={() => handleDownload(file.cid)}>⬇️</button>
-                                        <button title="Remove from Starred" className="iconButton" onClick={() => toggleStar(file.id)}>⭐</button>
+                                        <button title="Download" className="iconButton" onClick={() => handleDownload(file)}>⬇️</button>
+                                        <button title="Remove from Starred" className="iconButton" onClick={() => toggleStar(file.id)}>{file.is_starred ? "⭐" : "☆"}</button>
                                         <button title="Move to Bin" className="iconButton" onClick={() => handleDelete(file.id)}>🗑️</button>
                                     </div>
 
