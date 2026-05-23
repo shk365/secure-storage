@@ -50,21 +50,14 @@ function RenameDialog({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-[400px] rounded-2xl shadow-xl p-6">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white w-[400px] rounded-2xl p-6">
         
         {/* Header */}
         <div className="flex justify-between items-center mb-5">
           <h2 className="text-xl font-semibold">
             Rename File
           </h2>
-
-          <button
-            onClick={onClose}
-            className="closeBtn"
-          >
-            ✕
-          </button>
         </div>
 
         {/* File Info */}
